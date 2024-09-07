@@ -11,20 +11,15 @@ function getStatus() {
             isRunning = false;
         } else {
             isRunning = true;
-        } 
-        
+        }
         afficherEtatServeur();
         return;
-
-        // if (data === '') console.log('Server is down');
-        // else console.log('Server is up');
     }).catch(err => {
         console.log(err);
     });
 }
 
 function start() {
-    alert('Starting server');
     fetch('http://localhost:5000/start').then(response => {
         return response.text();
     }).then(data => {
@@ -35,7 +30,6 @@ function start() {
 }
 
 function stop() {
-    alert('Stopping server');
     fetch('http://localhost:5000/stop').then(response => {
         return response.text();
     }).then(data => {
@@ -57,5 +51,4 @@ function afficherEtatServeur() {
     }
 }
 
-// Exécuter la fonction une fois la page chargée
 window.onload = afficherEtatServeur;
