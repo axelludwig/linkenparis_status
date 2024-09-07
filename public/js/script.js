@@ -7,13 +7,14 @@ function getStatus() {
     fetch('http://localhost:5000/status').then(response => {
         return response.json();
     }).then(data => {
-        console.log(data);
-
         if (data.status === 'error') {
             isRunning = false;
         } else {
             isRunning = true;
-        } return;
+        } 
+        
+        afficherEtatServeur();
+        return;
 
         // if (data === '') console.log('Server is down');
         // else console.log('Server is up');
