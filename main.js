@@ -34,8 +34,7 @@ app.get('/status', (req, res) => {
         if (output.includes('Error') || output.includes('Erreur')) {
             throw new Error(output);
         }
-
-        response = { status: 'error', message: output };
+        response = { status: 'status', message: output };
         res.send(response);
 
     }).catch(err => {
