@@ -29,12 +29,10 @@ app.get('/', (req, res) => {
 app.get('/status', (req, res) => {
     let response;
     executeCommand(getStatusCommand).then(output => {
-        console.log("error");
-
         if (output.includes('Error') || output.includes('Erreur')) {
             throw new Error(output);
         }
-        response = { status: 'status', message: output };
+        response = { status: 'success', message: output };
         res.send(response);
 
     }).catch(err => {
