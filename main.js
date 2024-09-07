@@ -29,7 +29,7 @@ app.get('/', (req, res) => {
 app.get('/status', (req, res) => {
     let response;
     executeCommand(getStatusCommand).then(output => {
-        if (output.includes('Error') || output.includes('Erreur')) {
+        if (output.includes('Error') || output.includes('Erreur') || output == 0 || output == '0') {
             throw new Error(output);
         }
         response = { status: 'success', message: output };
