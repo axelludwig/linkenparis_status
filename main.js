@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const PORT = 5000; // Ton port
+const cors = require('cors');
 
 const corsOptions = {
     origin: 'https://fossason.linkenparis.com/',  // Replace with the URL you want to allow
