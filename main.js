@@ -4,6 +4,13 @@ const path = require('path');
 const app = express();
 const PORT = 5000; // Ton port
 
+const corsOptions = {
+    origin: 'https://fossason.linkenparis.com/',  // Replace with the URL you want to allow
+    optionsSuccessStatus: 200       // For legacy browser support
+};
+
+// Apply the CORS middleware with the specific origin
+app.use(cors(corsOptions));
 
 var exec = require('child_process').exec;
 // Configurer express pour servir les fichiers statiques depuis le dossier public
