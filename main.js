@@ -2,6 +2,8 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const { exec } = require('child_process');
+const https = require('https'); // Importer le module HTTPS
+const fs = require('fs'); // Importer le module FS
 
 const app = express();
 const PORT = 5000; // Port non privilégié
@@ -76,7 +78,16 @@ function executeCommand(command) {
     });
 }
 
-// Démarrer le serveur
-app.listen(PORT, () => {
-    console.log(`Serveur en écoute sur http://localhost:${PORT}`);
+// Configuration des options SSL
+const options = {
+    key: fs.readFileSync('/etc/nginx/_.linkenparis.com_private_key.key'), // Chemin vers votre clé privée
+    cert: fs.readFileSync('/etc/nginx/linkenparis.com_ssl_certificate.cer') // Chemin vers votre certificat SSL
+};
+
+// Créer le serveur HTTPS
+const server = https.createServer(options, app);
+
+// Démarrer le serveur HTTPS sur le port spécifié
+server.listen(PORT, () => {
+    console.log(`Serveur HTTPS en écoute sur https://localhost:${PORT}`);
 });
