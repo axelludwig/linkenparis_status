@@ -1,20 +1,23 @@
-const { error } = require('console');
 const express = require('express');
 const path = require('path');
-const app = express();
-const PORT = 5000; // Ton port
+const fs = require('fs'); // Pour lire les fichiers de certificats
+const https = require('https'); // Module HTTPS
 const cors = require('cors');
+const { exec } = require('child_process');
 
+const app = express();
+const PORT = 443; // Port par défaut pour HTTPS
+
+// Configuration CORS
 const corsOptions = {
-    origin: 'https://fossason.linkenparis.com/',  // Replace with the URL you want to allow
-    optionsSuccessStatus: 200       // For legacy browser support
+    origin: ['https://fossason.linkenparis.com', 'http://localhost'], // Utiliser un tableau d'origines
+    optionsSuccessStatus: 200 // Pour le support des navigateurs anciens
 };
 
-// Apply the CORS middleware with the specific origin
+// Appliquer le middleware CORS avec les origines spécifiques
 app.use(cors(corsOptions));
 
-var exec = require('child_process').exec;
-// Configurer express pour servir les fichiers statiques depuis le dossier public
+// Servir les fichiers statiques depuis le dossier 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Route pour servir index.html
@@ -22,71 +25,52 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-let getStatusCommand = "pm2 pid bot-soundboard-back";
-let startCommand = "pm2 start bot-soundboard-back";
-let stopCommand = "pm2 stop bot-soundboard-back";
+// Commandes PM2
+const getStatusCommand = "pm2 pid bot-soundboard-back";
+const startCommand = "pm2 start bot-soundboard-back";
+const stopCommand = "pm2 stop bot-soundboard-back";
 
-// Configurer express pour servir les fichiers statiques depuis le dossier public
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Route pour servir index.html
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/status', (req, res) => {
-    let response;
-    executeCommand(getStatusCommand).then(output => {
-        if (output.includes('Error') || output.includes('Erreur') || output == 0 || output == '0') {
+// Endpoints API
+app.get('/status', async (req, res) => {
+    try {
+        const output = await executeCommand(getStatusCommand);
+        if (output.includes('Error') || output.includes('Erreur') || output.trim() === '0') {
             throw new Error(output);
         }
-        response = { status: 'success', message: output };
-        res.send(response);
+        res.json({ status: 'success', message: output });
+    } catch (err) {
+        res.json({ status: 'error', message: err.message });
+    }
+});
 
-    }).catch(err => {
-        response = { status: 'error', message: err };
-        res.send(response);
-    });
-
-
-    // execute(getStatusCommand, function (output) { res.send(output); });
-})
-
-app.get('/start', (req, res) => {
-    executeCommand(startCommand).then(output => {
+app.get('/start', async (req, res) => {
+    try {
+        const output = await executeCommand(startCommand);
         res.send(output);
-    }).catch(err => {
-        res.send(err);
-    });
+    } catch (err) {
+        res.send(err.message);
+    }
+});
 
-    // console.log('Starting server');
-    // execute(startCommand, function (output) { console.log(output); });
-})
-
-app.get('/stop', (req, res) => {
-    executeCommand(stopCommand).then(output => {
+app.get('/stop', async (req, res) => {
+    try {
+        const output = await executeCommand(stopCommand);
         res.send(output);
-    }).catch(err => {
-        res.send(err);
-    });
+    } catch (err) {
+        res.send(err.message);
+    }
+});
 
-    // execute(stopCommand, function (output) { console.log(output); });
-})
-
-
-// function execute(command, callback) {
-//     exec(command, function (error, stdout, stderr) { callback(stdout); });
-// };
-
+// Fonction pour exécuter des commandes shell
 function executeCommand(command) {
     return new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {
             if (error) {
-                reject(`Erreur lors de l'exécution de la commande : ${error.message}`);
+                reject(new Error(`Erreur d'exécution : ${error.message}`));
                 return;
             }
             if (stderr) {
-                reject(`Erreur dans la commande : ${stderr}`);
+                reject(new Error(`Erreur dans la commande : ${stderr}`));
                 return;
             }
             resolve(stdout);
@@ -94,7 +78,15 @@ function executeCommand(command) {
     });
 }
 
-// Démarrer le serveur
-app.listen(PORT, () => {
-    console.log(`Serveur en écoute sur http://localhost:${PORT}`);
+// Lire les fichiers de certificat et de clé privée
+const sslOptions = {
+    key: fs.readFileSync(path.join(__dirname, '_.linkenparis.com_private_key.key')), // Chemin vers votre clé privée
+    cert: fs.readFileSync(path.join(__dirname, 'linkenparis.com_ssl_certificate.cer')) // Chemin vers votre certificat
+    // Si vous avez un fichier CA bundle, ajoutez-le ici :
+    // ca: fs.readFileSync(path.join(__dirname, 'ca_bundle.crt'))
+};
+
+// Créer le serveur HTTPS
+https.createServer(sslOptions, app).listen(PORT, () => {
+    console.log(`Serveur HTTPS en écoute sur https://yourdomain.com:${PORT}`);
 });
