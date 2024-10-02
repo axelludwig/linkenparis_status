@@ -1,36 +1,46 @@
+// main.js
+
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const { exec } = require('child_process');
-const https = require('https'); // Importer le module HTTPS
-const fs = require('fs'); // Importer le module FS
+const https = require('https'); // Import HTTPS module
+const fs = require('fs'); // Import FS module
 
 const app = express();
-const PORT = 5000; // Port non privilégié
+const PORT = 5000; // Non-privileged port
 
-// Configuration CORS
+// CORS Configuration
 const corsOptions = {
-    origin: ['https://fossason.linkenparis.com', 'http://localhost'], // Utiliser un tableau d'origines
-    optionsSuccessStatus: 200 // Pour le support des navigateurs anciens
+    origin: ['https://fossason.linkenparis.com', 'http://localhost'], // Allowed origins
+    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+    optionsSuccessStatus: 200 // Support for legacy browsers
 };
 
-// Appliquer le middleware CORS avec les origines spécifiques
+// Apply CORS middleware before other middleware and routes
 app.use(cors(corsOptions));
 
-// Servir les fichiers statiques depuis le dossier 'public'
+// Handle preflight (OPTIONS) requests for all routes
+app.options('*', cors(corsOptions));
+
+// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Route pour servir index.html
+// Route to serve index.html
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Commandes PM2
+// PM2 Commands
 const getStatusCommand = "pm2 pid bot-soundboard-back";
 const startCommand = "pm2 start bot-soundboard-back";
 const stopCommand = "pm2 stop bot-soundboard-back";
 
-// Endpoints API
+// API Endpoints
+
+/**
+ * Get the status of the bot-soundboard-back process.
+ */
 app.get('/status', async (req, res) => {
     try {
         const output = await executeCommand(getStatusCommand);
@@ -39,38 +49,48 @@ app.get('/status', async (req, res) => {
         }
         res.json({ status: 'success', message: output });
     } catch (err) {
-        res.json({ status: 'error', message: err.message });
+        res.status(500).json({ status: 'error', message: err.message });
     }
 });
 
+/**
+ * Start the bot-soundboard-back process.
+ */
 app.get('/start', async (req, res) => {
     try {
         const output = await executeCommand(startCommand);
         res.send(output);
     } catch (err) {
-        res.send(err.message);
+        res.status(500).send(err.message);
     }
 });
 
+/**
+ * Stop the bot-soundboard-back process.
+ */
 app.get('/stop', async (req, res) => {
     try {
         const output = await executeCommand(stopCommand);
         res.send(output);
     } catch (err) {
-        res.send(err.message);
+        res.status(500).send(err.message);
     }
 });
 
-// Fonction pour exécuter des commandes shell
+/**
+ * Function to execute shell commands.
+ * @param {string} command - The command to execute.
+ * @returns {Promise<string>} - The stdout from the executed command.
+ */
 function executeCommand(command) {
     return new Promise((resolve, reject) => {
         exec(command, (error, stdout, stderr) => {
             if (error) {
-                reject(new Error(`Erreur d'exécution : ${error.message}`));
+                reject(new Error(`Execution Error: ${error.message}`));
                 return;
             }
             if (stderr) {
-                reject(new Error(`Erreur dans la commande : ${stderr}`));
+                reject(new Error(`Command Error: ${stderr}`));
                 return;
             }
             resolve(stdout);
@@ -78,16 +98,16 @@ function executeCommand(command) {
     });
 }
 
-// Configuration des options SSL
+// SSL Options
 const options = {
-    key: fs.readFileSync('/etc/nginx/_.linkenparis.com_private_key.key'), // Chemin vers votre clé privée
-    cert: fs.readFileSync('/etc/nginx/linkenparis.com_ssl_certificate.cer') // Chemin vers votre certificat SSL
+    key: fs.readFileSync('/etc/nginx/_.linkenparis.com_private_key.key'), // Path to your private key
+    cert: fs.readFileSync('/etc/nginx/linkenparis.com_ssl_certificate.cer') // Path to your SSL certificate
 };
 
-// Créer le serveur HTTPS
+// Create HTTPS server
 const server = https.createServer(options, app);
 
-// Démarrer le serveur HTTPS sur le port spécifié
+// Start HTTPS server on specified port
 server.listen(PORT, () => {
-    console.log(`Serveur HTTPS en écoute sur https://localhost:${PORT}`);
+    console.log(`HTTPS Server is running on https://localhost:${PORT}`);
 });
