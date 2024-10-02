@@ -1,12 +1,10 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs'); // Pour lire les fichiers de certificats
-const https = require('https'); // Module HTTPS
 const cors = require('cors');
 const { exec } = require('child_process');
 
 const app = express();
-const PORT = 443; // Port par défaut pour HTTPS
+const PORT = 5000; // Port non privilégié
 
 // Configuration CORS
 const corsOptions = {
@@ -78,15 +76,7 @@ function executeCommand(command) {
     });
 }
 
-// Lire les fichiers de certificat et de clé privée
-const sslOptions = {
-    key: fs.readFileSync(path.join(__dirname, '_.linkenparis.com_private_key.key')), // Chemin vers votre clé privée
-    cert: fs.readFileSync(path.join(__dirname, 'linkenparis.com_ssl_certificate.cer')) // Chemin vers votre certificat
-    // Si vous avez un fichier CA bundle, ajoutez-le ici :
-    // ca: fs.readFileSync(path.join(__dirname, 'ca_bundle.crt'))
-};
-
-// Créer le serveur HTTPS
-https.createServer(sslOptions, app).listen(PORT, () => {
-    console.log(`Serveur HTTPS en écoute sur https://yourdomain.com:${PORT}`);
+// Démarrer le serveur
+app.listen(PORT, () => {
+    console.log(`Serveur en écoute sur http://localhost:${PORT}`);
 });
