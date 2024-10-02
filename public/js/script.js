@@ -4,7 +4,7 @@ setInterval(getStatus, 1000);
 let isRunning = false;
 
 function getStatus() {
-    fetch('http://linkenparis.com:5000/status').then(response => {
+    fetch('https://linkenparis.com:5000/status').then(response => {
         return response.json();
     }).then(data => {
         if (data.status === 'error') {
@@ -20,7 +20,7 @@ function getStatus() {
 }
 
 function start() {
-    fetch('http://linkenparis.com:5000/start').then(response => {
+    fetch('https://linkenparis.com:5000/start').then(response => {
         return response.text();
     }).then(data => {
         console.log(data);
@@ -30,7 +30,7 @@ function start() {
 }
 
 function stop() {
-    fetch('http://linkenparis.com:5000/stop').then(response => {
+    fetch('https://linkenparis.com:5000/stop').then(response => {
         return response.text();
     }).then(data => {
         console.log(data);
